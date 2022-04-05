@@ -1,14 +1,15 @@
 import { Router } from "express";
-import { StatusCodes } from "http-status-codes";
+import { addNewProduct, deleteProduct, getProducts, updateProductInfo } from "../controllers/productsController.js";
+
 
 const ProductsRouter = Router();
 
-ProductsRouter.get("/products", (req, res) => {
-    return res.status(StatusCodes.OK).json({ "message": "Respuesta desde products" });
-});
+ProductsRouter.get("/products", getProducts);
 
-ProductsRouter.post("/products", (req, res) => {
-    return res.status(StatusCodes.CREATED).json({ "message": "Se ha creado el producto" });
-});
+ProductsRouter.post("/products", addNewProduct);
+
+ProductsRouter.patch("/products/:id", updateProductInfo)
+
+ProductsRouter.delete("/products/:id", deleteProduct)
 
 export default ProductsRouter;

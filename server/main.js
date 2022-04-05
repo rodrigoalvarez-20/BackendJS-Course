@@ -11,20 +11,21 @@ let logger = morgan("dev");
 
 app.use(logger);
 app.use(cors());
+app.use(express.json());
 
 app.use(UsersRouter);
 app.use(ProductsRouter);
 
+
 /**
- * Actividad: Implementar un router para Usuarios, Productos y Ventas
+ * Actividad: Terminar la implementacion de las rutas de Usuarios, Productos y Ventas
+ * Implementar el jwtSign y auth
+ * Implementar configParser y/o env 
+ * Implementar la base de datos de mongo
  */
 
 app.get("/", (req, res) => {
     return res.status(StatusCodes.OK).json({"message": "Api correcta"});
-});
-
-app.post("/", (req, res) => {
-    return res.status(StatusCodes.CREATED).json({ "message": "Creacion exitosa" })
 });
 
 app.use("*", (req, res) => {
