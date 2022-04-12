@@ -7,7 +7,7 @@ const UsersRouter = Router();
 UsersRouter.get("/users/me", getUserProfileMethod);
 UsersRouter.patch("/users/me", updateUserProfileMethod);
 
-UsersRouter.post("/app/users/login", loginUserMethod);
+UsersRouter.post("/users/login", loginUserMethod);
 UsersRouter.post("/users/register", registerUserMethod);
 
 export default UsersRouter;
