@@ -2,10 +2,51 @@ import { StatusCodes } from "http-status-codes";
 import bcrypt from "bcrypt";
 import user from "../models/user.js";
 import mongoose from "mongoose";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import fs from "fs";
+
+/**
+ * 1. Restringir el acceso a esta ruta
+ * 2. Validar la token
+ * 3. Obtener los datos de la token (_id) para hacer la peticion a la BD
+ * 4. Regresarle la informacion del perfil al usuario
+ */
 
 const getUserProfileMethod = (req, res) => {
-    return res.status(StatusCodes.OK).json({ "message": "Respuesta desde users" });
+
+    const { authorization } = req.headers;
+
+    //const auth_header = req.headers["authorization"]; Manera alternativa (si no se quiere utilizar destrucuracion de parametros)
+
+    if(!authorization){
+        return res.status(StatusCodes.BAD_REQUEST).json({ "error": "Encabezado no encontrado" });
+    }
+
+    const pubKey =  fs.readFileSync(`${process.cwd()}/keys/public.pem`, "utf-8");
+
+    try {
+        
+        const jwtData = jwt.verify(authorization, pubKey);
+
+        const { id } = jwtData; //Destructuracion de parametros
+
+        user.findById(id, {"_id": 0, "password": 0, "__v": 0}).exec().then(usr_find => {
+
+            if(!usr_find){
+                //No se encontró el usuario
+                return res.status(StatusCodes.NOT_FOUND).json({ "error": "El usuario no existe" });
+            }
+
+            return res.status(StatusCodes.OK).json(usr_find);
+
+        }).catch(usrError => {
+            console.log(usrError);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al obtener los datos" });
+        });
+    } catch (validateError)  {
+        console.log(validateError);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al validar la token" });
+    }
 }
 
 const loginUserMethod = (req, res) => {
@@ -30,7 +71,7 @@ const loginUserMethod = (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ "error": "Las credenciales son incorrectas" });
         }
 
-        const { _id, name, last_name } = user_found;
+        const { _id, name } = user_found;
         const pwd_hsh = user_found["password"];
 
 
@@ -51,10 +92,20 @@ const loginUserMethod = (req, res) => {
         // 1.2 Leer el archivo private.key
         // 2. Especificar el algoritmo
         // 3. Generar la token
+        
+        const pKey = fs.readFileSync(`${process.cwd()}/keys/private.key`, "utf-8"); // Obtener la ruta de ejecucion y leer el archivo
 
 
+        const token = jwt.sign(token_payload, pKey, {
+            "algorithm": "RS256",
+            "expiresIn": "6h"
+        });
 
-        return res.status(StatusCodes.OK).json(user_found);
+        if (!token) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al generar la token" })
+        }
+
+        return res.status(StatusCodes.OK).json({ "message": "Inicio de sesion correcto", token });
 
 
     }).catch(usrError => {
@@ -87,36 +138,33 @@ const registerUserMethod = (req, res) => {
         if (user_in_db !== null) {
             console.log(user_in_db);
             return res.status(StatusCodes.BAD_REQUEST).json({ "error": "El email ya se encuentra registrado" })
-        } else {
-            const pwdHsh = bcrypt.hashSync(password, 12);
-
-            if (pwdHsh === null) {
-                return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al hashear el password" })
-            }
-
-            const user_to_insert = {
-                "_id": mongoose.Types.ObjectId(),
-                name,
-                last_name,
-                email,
-                "password": pwdHsh,
-                "createdAt": new Date().toISOString()
-            }
-            // Crear un usuario mediante Session
-            /* const session =  user.startSession();
-
-            user.create([
-                user_to_insert
-            ], session);
-
-            await session.commitTransaction(); */
-
-            //Crear un usuario mediante exec
-
-            //new user(user_to_insert)
-
-            return res.status(StatusCodes.CREATED).json({ "message": "Sea ha creado correctamente el usuario" });
         }
+        const pwdHsh = bcrypt.hashSync(password, 12);
+
+        if (pwdHsh === null) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al hashear el password" })
+        }
+
+        const user_to_insert = new user({
+            "_id": mongoose.Types.ObjectId(),
+            name,
+            last_name,
+            email,
+            "password": pwdHsh,
+            "createdAt": new Date().toISOString()
+        });
+
+        user_to_insert.save().then(usr_ins => {
+            if(usr_ins === null){
+                return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al insertar el usuario" })
+            }
+            console.log(`Inserted DOC: ${usr_ins}`);
+            return res.status(StatusCodes.CREATED).json({ "message": "Se ha creado el usuario", "_id": usr_ins["_id"] });
+        }).catch(errorIns => {
+            console.log(errorIns);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al crear el usuario" })
+        });
+
     }).catch(error => {
         console.log(error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al solicitar los datos de usuario en la BD" })
