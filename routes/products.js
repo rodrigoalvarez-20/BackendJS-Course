@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { addNewProduct, deleteProduct, getProducts, updateProductInfo } from "../controllers/productsController.js";
+import { auth_user } from "../middlewares/index.js";
 
 
 const ProductsRouter = Router();
 
-ProductsRouter.get("/products", getProducts);
+ProductsRouter.get("/products", auth_user, getProducts);
 
 ProductsRouter.post("/products", addNewProduct);
 

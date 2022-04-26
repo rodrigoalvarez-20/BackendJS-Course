@@ -37,9 +37,16 @@ app.use(ProductsRouter);
 
 /**
  * Actividad: Terminar la implementacion de las rutas de Usuarios, Productos y Ventas
- * Implementar el jwtSign y auth
- * Implementar configParser y/o env 
- * Implementar la base de datos de mongo
+ * Implementar el jwtSign y auth (Listo)
+ * Implementar configParser y/o env (Medio)
+ * Implementar la base de datos de mongo (Listo)
+ * File Uploads para imagenes
+ * Ver lo de las peticiones web (copy as cURL)
+ * Ver lo del servidor (Heroku y EC2/Azure)
+ * PM2
+ * Crontab
+ * Webhooks (Crear y utilizar)
+ * Mailing crudo, notificaciones (telegram)
  */
 
 app.get("/", (req, res) => {

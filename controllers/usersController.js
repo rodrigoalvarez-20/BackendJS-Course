@@ -13,17 +13,12 @@ import fs from "fs";
  */
 
 const getUserProfileMethod = (req, res) => {
-
     const { authorization } = req.headers;
-
     //const auth_header = req.headers["authorization"]; Manera alternativa (si no se quiere utilizar destrucuracion de parametros)
-
     if(!authorization){
         return res.status(StatusCodes.BAD_REQUEST).json({ "error": "Encabezado no encontrado" });
     }
-
     const pubKey =  fs.readFileSync(`${process.cwd()}/keys/public.pem`, "utf-8");
-
     try {
         
         const jwtData = jwt.verify(authorization, pubKey);
@@ -47,6 +42,26 @@ const getUserProfileMethod = (req, res) => {
         console.log(validateError);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al validar la token" });
     }
+}
+
+const getUserProfileV2 = (req, res) => {
+    // Ahora los datos vienen en req.payload
+    // Pero unicamente son visibles del lado del servidor, ya que es en "req"
+    const { id } = req.payload; //Destructuracion de parametros
+
+    user.findById(id, { "_id": 0, "password": 0, "__v": 0 }).exec().then(usr_find => {
+
+        if (!usr_find) {
+            //No se encontró el usuario
+            return res.status(StatusCodes.NOT_FOUND).json({ "error": "El usuario no existe" });
+        }
+
+        return res.status(StatusCodes.OK).json(usr_find);
+
+    }).catch(usrError => {
+        console.log(usrError);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al obtener los datos" });
+    });
 }
 
 const loginUserMethod = (req, res) => {
@@ -172,8 +187,40 @@ const registerUserMethod = (req, res) => {
 
 }
 
+const update_fields = ["name", "last_name", "phone"];
+
 const updateUserProfileMethod = (req, res) => {
-    return res.status(StatusCodes.OK).json({ "message": "Se ha actualizado correctamente el perfil" })
+
+    const { id } = req.payload;
+
+    var update_ops = {};
+
+    update_fields.forEach(v => {
+        const ops = req.body[[v]];
+        if(ops !== undefined && ops !== ""){
+            update_ops[[v]] = ops;
+        }
+    });
+
+    if (update_ops === {}){
+        return res.status(StatusCodes.BAD_REQUEST).json({ "error": "Los campos no pueden estar vacios" });
+    }
+
+    console.log(update_ops);
+
+    user.findByIdAndUpdate(id, update_ops, { new: true }).exec().then(usrUpdated => {
+
+        if(usrUpdated === undefined){
+            return res.status(StatusCodes.NOT_FOUND).json({ "error": "No se ha encontrado el perfil de usuario" });
+        }
+
+        return res.status(StatusCodes.OK).json({ "message": "Se ha actualizado correctamente" });
+
+    }).catch(error => {
+        console.log(error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ "error": "Ha ocurrido un error al actualizar los datos" });
+    });
+
 }
 
 const getAllClients = (req, res) => {
@@ -181,4 +228,4 @@ const getAllClients = (req, res) => {
 };
 
 
-export { getUserProfileMethod, loginUserMethod, registerUserMethod, updateUserProfileMethod }
+export { getUserProfileMethod, loginUserMethod, registerUserMethod, updateUserProfileMethod, getUserProfileV2 }

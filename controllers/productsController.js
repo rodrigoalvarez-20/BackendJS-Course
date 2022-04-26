@@ -1,6 +1,9 @@
 import { StatusCodes } from "http-status-codes";
 
 const getProducts = (req, res) => {
+
+    console.log(req.query);
+
     return res.status(StatusCodes.OK).json({ "products": [] });
 }
 
