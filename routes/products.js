@@ -5,7 +5,7 @@ import { auth_user } from "../middlewares/index.js";
 
 const ProductsRouter = Router();
 
-ProductsRouter.get("/products", auth_user, getProducts);
+ProductsRouter.get("/products", getProducts);
 
 ProductsRouter.post("/products", addNewProduct);
 

@@ -17,6 +17,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ "extended": true }))
 
+
 //Conexión con la DB
 
 const { user, pwd, host } = getMongoCreds();
