@@ -17,6 +17,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ "extended": true }))
 
+// Hacer la carpeta de imagenes publica
+app.use(express.static("images"))
+
 
 //Conexión con la DB
 
