@@ -53,7 +53,7 @@ app.use(ProductsRouter);
  * Mailing crudo, notificaciones (telegram)
  */
 
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
     return res.status(StatusCodes.OK).json({ "message": "Api correcta" });
 });
 
