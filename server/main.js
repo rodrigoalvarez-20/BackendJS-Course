@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import UsersRouter from "../routes/users.js";
 import ProductsRouter from "../routes/products.js";
 import { getMongoCreds } from "../utils/configs.js";
+import getMysqlAdapter from "../utils/mysqldb.js";
 
 
 let app = express();
@@ -54,6 +55,19 @@ app.use(ProductsRouter);
  */
 
 app.get("/api", (req, res) => {
+
+    var mysqlConn = getMysqlAdapter();
+    if (mysqlConn !== null){
+        const data = mysqlConn.query("SELECT * FROM usuarios", (error, datos) => {
+            console.log(datos);
+            datos.forEach(d => {
+                //console.log(d[0]);
+            })
+        });
+        return res.status(StatusCodes.OK).json(data);
+    }
+    
+
     return res.status(StatusCodes.OK).json({ "message": "Api correcta" });
 });
 
