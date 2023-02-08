@@ -56,7 +56,7 @@ app.use(ProductsRouter);
 
 app.get("/api", (req, res) => {
 
-    var mysqlConn = getMysqlAdapter();
+    /* var mysqlConn = getMysqlAdapter();
     if (mysqlConn !== null){
         const data = mysqlConn.query("SELECT * FROM usuarios", (error, datos) => {
             console.log(datos);
@@ -65,7 +65,7 @@ app.get("/api", (req, res) => {
             })
         });
         return res.status(StatusCodes.OK).json(data);
-    }
+    } */
     
 
     return res.status(StatusCodes.OK).json({ "message": "Api correcta" });
